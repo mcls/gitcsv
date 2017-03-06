@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -19,10 +20,16 @@ func main() {
 		outputPath = os.Args[2]
 	}
 
-	parseGitHistory(inputPath, outputPath)
+	out, err := os.Create(outputPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	parseGitHistory(inputPath, out)
 }
 
-func parseGitHistory(inputPath, outputPath string) {
+func parseGitHistory(inputPath string, out io.Writer) {
 	log.Println("Opening repo")
 	repo, err := git2go.OpenRepository(inputPath)
 	if err != nil {
@@ -39,32 +46,29 @@ func parseGitHistory(inputPath, outputPath string) {
 		log.Fatal(err)
 	}
 
-	f, err := os.Create(outputPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-	w := csv.NewWriter(f)
+	w := csv.NewWriter(out)
 	if err := w.Write(csvHeader); err != nil {
 		log.Fatalln("error writing record to csv:", err)
 	}
 
-	gi := head.Target()
+	oid := head.Target()
 	for {
-		commit, err := gitCommitFromOid(repo, gi)
+		commit, err := gitCommitFromOid(repo, oid)
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		row := commitToCSVRow(commit)
 		if err := w.Write(row); err != nil {
 			log.Fatalln("error writing record to csv:", err)
 		}
 
 		// Go to next commit
-		if err := rv.Next(gi); err != nil {
+		if err := rv.Next(oid); err != nil {
 			break
 		}
 	}
+
 	w.Flush()
 	if err := w.Error(); err != nil {
 		log.Fatal(err)
