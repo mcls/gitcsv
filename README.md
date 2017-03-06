@@ -16,7 +16,7 @@ gitcsv path/to/git/repo/ ./git_log.csv
 
 ## Example
 
-Parsing the linux kernel's git history:
+Parsing the [linux](https://github.com/torvalds/linux) kernel's git history:
 
 ```
 $ gitcsv ~/Desktop/experiment/linux
@@ -25,7 +25,7 @@ $ gitcsv ~/Desktop/experiment/linux
 2017/03/06 09:31:52 Done.
 ```
 
-As you can see it takes about 30 seconds.
+As you can see it takes less than 30 seconds to parse more than 600k commits.
 
 ## Dependencies
 
